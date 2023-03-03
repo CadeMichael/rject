@@ -21,14 +21,15 @@ fn proj_path() -> PathBuf {
         None => panic!("Cannot find home dir"),
         Some(h) => h,
     };
+    // join $HOME and .proj
     let path = Path::new("").join(home).join(".proj");
+
     return path.to_path_buf();
 }
 
 fn read_proj() -> Vec<String> {
     // get project file path
     let path = proj_path().clone();
-    
     // open or create 
     let file = match File::open(&path) {
         // proj file doesn't exist
@@ -38,52 +39,62 @@ fn read_proj() -> Vec<String> {
             // empty file created (no need to read)
             Ok(_) => return vec![],
         },
+
         // return file
         Ok(file) => file,
     };
 
     // get buffer from file
     let buf = BufReader::new(file);
-
     // convert buffer to vector with no empty entries
     let projs: Vec<String> = buf
         .lines()
         .map(|l| l.expect("file cannot be read"))
-        .filter(|p| p != "")
+        .filter(|p| p != "") // no blank lines
         .collect();
 
     return projs;
 }
 
 fn add_project(p: &str, projs: &Vec<String>) {
+    // make sure project isn't already present
     for proj in projs {
         if p == proj {
             return
         }
     }
+
+    // get init file path
     let path = proj_path().clone();
+    // open file for appending
     let mut file = OpenOptions::new()
         .append(true)
         .open(&path)
         .expect("cannot open proj file");
 
+    // append new project
     file.write_fmt(format_args!("{}\n", p)).expect("wrote to file");
 }
 
 fn remove_project(proj: &str, projs: Vec<String>) -> Vec<String> {
+    // get init file path
     let path = proj_path().clone();
+    // open file (overwrite)
     let mut file = File::create(&path)
         .expect("cannot access proj file");
 
+    // remove specified project
     let new_projs:Vec<String> = projs
         .into_iter()
         .filter(|p| p != proj)
         .collect();
 
+    // re write file from scratch
     for p in new_projs.iter() {
         file.write_fmt(format_args!("{}\n", p))
             .expect("cannot write");
     }
 
+    // return refactored list of projects
     return new_projs;
 }
