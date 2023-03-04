@@ -53,6 +53,7 @@ fn read_proj() -> Vec<String> {
         .filter(|p| p != "") // no blank lines
         .collect();
 
+    // return vector of projects
     return projs;
 }
 
