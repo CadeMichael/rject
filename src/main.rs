@@ -1,4 +1,3 @@
-use dirs;
 use std::fs::{File, OpenOptions};
 use std::io::{prelude::*, BufReader};
 use std::path::{Path, PathBuf};
@@ -23,17 +22,14 @@ fn proj_path() -> PathBuf {
     };
     // join $HOME and .proj
     let path = Path::new("").join(home).join(".proj");
-
-    return path.to_path_buf();
+    path.to_path_buf()
 }
 
 fn read_proj() -> Vec<String> {
-    // get project file path
-    let path = proj_path().clone();
     // open or create 
-    let file = match File::open(&path) {
+    let file = match File::open(proj_path()) {
         // proj file doesn't exist
-        Err(_) => match File::create(&path) {
+        Err(_) => match File::create(proj_path()) {
             // can't create
             Err(e) => panic!("issue reading or creating file: {}", e),
             // empty file created (no need to read)
@@ -50,27 +46,22 @@ fn read_proj() -> Vec<String> {
     let projs: Vec<String> = buf
         .lines()
         .map(|l| l.expect("file cannot be read"))
-        .filter(|p| p != "") // no blank lines
+        .filter(|p| !p.is_empty()) // no blank lines
         .collect();
 
     // return vector of projects
-    return projs;
+    projs
 }
 
-fn add_project(p: &str, projs: &Vec<String>) {
+fn add_project(p: &str, projs: &[String]) {
     // make sure project isn't already present
-    for proj in projs {
-        if p == proj {
-            return
-        }
+    if projs.contains(&p.to_string()) {
+        return
     }
-
-    // get init file path
-    let path = proj_path().clone();
     // open file for appending
     let mut file = OpenOptions::new()
         .append(true)
-        .open(&path)
+        .open(proj_path())
         .expect("cannot open proj file");
 
     // append new project
@@ -78,10 +69,8 @@ fn add_project(p: &str, projs: &Vec<String>) {
 }
 
 fn remove_project(proj: &str, projs: Vec<String>) -> Vec<String> {
-    // get init file path
-    let path = proj_path().clone();
     // open file (overwrite)
-    let mut file = File::create(&path)
+    let mut file = File::create(proj_path())
         .expect("cannot access proj file");
 
     // remove specified project
@@ -97,5 +86,5 @@ fn remove_project(proj: &str, projs: Vec<String>) -> Vec<String> {
     }
 
     // return refactored list of projects
-    return new_projs;
+    new_projs
 }
