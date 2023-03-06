@@ -1,90 +1,82 @@
-use std::fs::{File, OpenOptions};
-use std::io::{prelude::*, BufReader};
-use std::path::{Path, PathBuf};
+use cursive::event::EventResult;
+// use cursive::event::EventResult;
+use cursive::theme::{Color, PaletteColor, Theme};
+use cursive::traits::*;
+use cursive::view::Selector;
+use cursive::views::{Dialog, EditView, LinearLayout, OnEventView, SelectView, TextView};
+use cursive::Cursive;
+
+mod proj_file;
+
+// fn change(siv: &mut Cursive) -> EventResult {
+    // let name = siv.focus(&Selector::Name("eview"));
+    // return name.unwrap_or_else(|e| panic!("{}", e));
+// }
 
 fn main() {
-    add_project("cade/world", &read_proj());
-    add_project("test/world", &read_proj());
-    add_project("test1/world", &read_proj());
-    add_project("test2/world", &read_proj());
+    let mut select = SelectView::new()
+        .h_align(cursive::align::HAlign::Center)
+        .autojump();
+    let content = proj_file::read_proj();
+    select.add_all_str(content);
+    let mut siv = cursive::default();
+    select.set_on_submit(|s, name: &str| show_popup(s, name));
+    let select = OnEventView::new(select)
+        // -- moving around list --
+        .on_pre_event_inner('k', |s, _| {
+            let cb = s.select_up(1);
+            Some(EventResult::Consumed(Some(cb)))
+        })
+        .on_pre_event_inner('j', |s, _| {
+            let cb = s.select_down(1);
+            Some(EventResult::Consumed(Some(cb)))
+        })
+        // -- adding / removing projects --
+        .on_event('n', |s| {
+            s.focus(&Selector::Name("eview")).unwrap();
+        });
 
-    let projs = read_proj();
-    println!("{:?}", projs);
-    remove_project("cade/world", projs);
-    println!("{:?}", read_proj());
+    let theme = custom_theme_from_cursive(&siv);
+    siv.set_theme(theme);
+    siv.add_layer(Dialog::around(
+        LinearLayout::horizontal()
+            .child(Dialog::around(select.scrollable()))
+            .child(
+                Dialog::new()
+                    .title("New Project Path:")
+                    .padding_lrtb(1, 1, 1, 0)
+                    .content(
+                        EditView::new()
+                            .on_submit(show_popup)
+                            .with_name("new proj")
+                            .fixed_width(20)
+                            .with_name("eview"),
+                    )
+                    .button("Ok", |s| {
+                        let path = s
+                            .call_on_name("new proj", |view: &mut EditView| view.get_content())
+                            .unwrap();
+                        show_popup(s, &path);
+                    }),
+            ),
+    ));
+
+    siv.run();
 }
 
-fn proj_path() -> PathBuf {
-    // create path
-    let home = match dirs::home_dir() {
-        None => panic!("Cannot find home dir"),
-        Some(h) => h,
-    };
-    // join $HOME and .proj
-    let path = Path::new("").join(home).join(".proj");
-    path.to_path_buf()
+fn custom_theme_from_cursive(siv: &Cursive) -> Theme {
+    let mut theme = siv.current_theme().clone();
+    theme.palette[PaletteColor::Background] = Color::TerminalDefault;
+    theme
 }
 
-fn read_proj() -> Vec<String> {
-    // open or create 
-    let file = match File::open(proj_path()) {
-        // proj file doesn't exist
-        Err(_) => match File::create(proj_path()) {
-            // can't create
-            Err(e) => panic!("issue reading or creating file: {}", e),
-            // empty file created (no need to read)
-            Ok(_) => return vec![],
-        },
-
-        // return file
-        Ok(file) => file,
-    };
-
-    // get buffer from file
-    let buf = BufReader::new(file);
-    // convert buffer to vector with no empty entries
-    let projs: Vec<String> = buf
-        .lines()
-        .map(|l| l.expect("file cannot be read"))
-        .filter(|p| !p.is_empty()) // no blank lines
-        .collect();
-
-    // return vector of projects
-    projs
-}
-
-fn add_project(p: &str, projs: &[String]) {
-    // make sure project isn't already present
-    if projs.contains(&p.to_string()) {
-        return
+fn show_popup(s: &mut Cursive, path: &str) {
+    if path.is_empty() {
+        s.add_layer(Dialog::info("Enter Project Path:"));
+    } else {
+        let content = format!("Project {path}!");
+        proj_file::add_project(path, &proj_file::read_proj());
+        s.pop_layer();
+        s.add_layer(Dialog::around(TextView::new(content)).button("Quit", |s| s.quit()));
     }
-    // open file for appending
-    let mut file = OpenOptions::new()
-        .append(true)
-        .open(proj_path())
-        .expect("cannot open proj file");
-
-    // append new project
-    file.write_fmt(format_args!("{}\n", p)).expect("wrote to file");
-}
-
-fn remove_project(proj: &str, projs: Vec<String>) -> Vec<String> {
-    // open file (overwrite)
-    let mut file = File::create(proj_path())
-        .expect("cannot access proj file");
-
-    // remove specified project
-    let new_projs:Vec<String> = projs
-        .into_iter()
-        .filter(|p| p != proj)
-        .collect();
-
-    // re write file from scratch
-    for p in new_projs.iter() {
-        file.write_fmt(format_args!("{}\n", p))
-            .expect("cannot write");
-    }
-
-    // return refactored list of projects
-    new_projs
 }
