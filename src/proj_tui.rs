@@ -1,9 +1,10 @@
+use std::env;
 use std::process::Command;
 
 use cursive::event::EventResult;
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
-use cursive::views::{Dialog, EditView, OnEventView, SelectView, TextView};
+use cursive::views::{Dialog, EditView, LinearLayout, OnEventView, SelectView, TextView};
 use cursive::Cursive;
 
 // I think this import is correct
@@ -16,28 +17,47 @@ pub fn custom_theme_from_cursive(siv: &Cursive) -> Theme {
 }
 
 pub fn new_proj_popup(s: &mut Cursive) {
-    s.add_layer(
-        Dialog::new()
-            .title("New Project Path:")
-            .padding_lrtb(1, 1, 1, 0)
-            .content(
-                EditView::new()
-                    .on_submit(created_new_popup)
-                    .with_name("new proj")
-                    .full_width()
-                    .max_width(60)
-                    .with_name("eview"),
+    s.add_layer(Dialog::around(
+        LinearLayout::vertical()
+            .child(
+                Dialog::new()
+                    .title("New Project Path:")
+                    .padding_lrtb(1, 1, 1, 0)
+                    .content(
+                        EditView::new()
+                            .on_submit(created_new_popup)
+                            .with_name("new proj")
+                            .full_width()
+                            .max_width(60)
+                            .with_name("eview"),
+                    )
+                    .button("pwd", |s| {
+                        let dir = env::current_dir();
+                        let string;
+                        let path = match dir {
+                            Ok(s) => {
+                                string = format!("{}/", s.to_str().unwrap());
+                                &string
+                            }
+                            Err(e) => panic!("error retrieving dir {e}"),
+                        };
+                        s.call_on_name("new proj", |view: &mut EditView| view.set_content(path));
+                    })
+                    .button("add", |s| {
+                        let path = s
+                            .call_on_name("new proj", |view: &mut EditView| view.get_content())
+                            .unwrap();
+                        created_new_popup(s, &path);
+                    })
+                    .button("Q", |s| {
+                        s.pop_layer();
+                    }),
             )
-            .button("Q", |s| {
-                s.pop_layer();
-            })
-            .button("add", |s| {
-                let path = s
-                    .call_on_name("new proj", |view: &mut EditView| view.get_content())
-                    .unwrap();
-                created_new_popup(s, &path);
-            }),
-    )
+            .child(TextView::new(format!(
+                "pwd:\n{}",
+                env::current_dir().unwrap().to_str().unwrap()
+            ))),
+    ));
 }
 
 pub fn create_select_list() -> OnEventView<SelectView> {
