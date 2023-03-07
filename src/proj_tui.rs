@@ -1,7 +1,7 @@
 use std::env;
 use std::process::Command;
 
-use cursive::event::EventResult;
+use cursive::event::{EventResult, Key};
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
 use cursive::views::{Dialog, EditView, LinearLayout, OnEventView, SelectView, TextView};
@@ -32,8 +32,11 @@ pub fn new_proj_popup(s: &mut Cursive) {
                             .with_name("eview"),
                     )
                     .button("pwd", |s| {
+                        // get dir
                         let dir = env::current_dir();
+                        // use let outside of match to bind variable
                         let string;
+                        // get path as &String
                         let path = match dir {
                             Ok(s) => {
                                 string = format!("{}/", s.to_str().unwrap());
@@ -41,6 +44,7 @@ pub fn new_proj_popup(s: &mut Cursive) {
                             }
                             Err(e) => panic!("error retrieving dir {e}"),
                         };
+                        // set editable text to 'pwd'
                         s.call_on_name("new proj", |view: &mut EditView| view.set_content(path));
                     })
                     .button("add", |s| {
@@ -80,6 +84,7 @@ pub fn create_select_list() -> OnEventView<SelectView> {
         // the _ i'm using represents an 'Event' not sure if needs to be delt with
         // for what we're doing
     let select = OnEventView::new(select)
+        .on_event(Key::Esc, |s| s.quit())
         // -- moving around list --
         .on_pre_event_inner('k', |s, _| {
             let cb = s.select_up(1);
