@@ -18,7 +18,7 @@ fn main() {
     siv.add_layer(Dialog::around(
         LinearLayout::vertical()
             .child(Dialog::around(select.scrollable()).title("Projects"))
-            .child(TextView::new("r: refresh n: new D: delete Esc: exit")),
+            .child(TextView::new(" r:refresh | n:new | D:delete | Esc:exit ")),
     ));
 
     siv.run();
