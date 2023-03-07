@@ -2,18 +2,6 @@ use std::fs::{File, OpenOptions};
 use std::io::{prelude::*, BufReader};
 use std::path::{Path, PathBuf};
 
-// fn main() {
-// add_project("cade/world", &read_proj());
-// add_project("test/world", &read_proj());
-// add_project("test1/world", &read_proj());
-// add_project("test2/world", &read_proj());
-
-// let projs = read_proj();
-// println!("{:?}", projs);
-// remove_project("cade/world", projs);
-// println!("{:?}", read_proj());
-// }
-
 fn proj_path() -> PathBuf {
     // create path
     let home = match dirs::home_dir() {
