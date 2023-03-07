@@ -82,8 +82,11 @@ pub fn created_new_popup(s: &mut Cursive, path: &str) {
     if path.is_empty() {
         s.add_layer(Dialog::info("Enter Project Path:"));
     } else {
-        let content = format!("Project {path}!");
-        proj_file::add_project(path, &proj_file::read_proj());
+        // determine if path is correct or if project already exists
+        let content = match proj_file::add_project(path, &proj_file::read_proj()) {
+            None => format!("Project {path}!"),
+            Some(s) => s,
+        };
         s.pop_layer();
         s.add_layer(Dialog::around(TextView::new(content)).button("Ok", |s| {
             s.pop_layer();

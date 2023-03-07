@@ -41,10 +41,10 @@ pub fn read_proj() -> Vec<String> {
     projs
 }
 
-pub fn add_project(p: &str, projs: &[String]) {
+pub fn add_project(p: &str, projs: &[String]) -> Option<String> {
     // make sure project isn't already present
     if projs.contains(&p.to_string()) {
-        return;
+        return Some("Project Already Listed".to_string());
     }
     // open file for appending
     let mut file = OpenOptions::new()
@@ -52,9 +52,18 @@ pub fn add_project(p: &str, projs: &[String]) {
         .open(proj_path())
         .expect("cannot open proj file");
 
-    // append new project
-    file.write_fmt(format_args!("{}\n", p))
-        .expect("wrote to file");
+    let res = match Path::new(p).exists() {
+        // append new project
+        true => {
+            file.write_fmt(format_args!("{}\n", p))
+                .expect("wrote to file");
+            None
+        }
+        // path doesn't exist
+        false => Some("Path Does Not Exists.".to_string()),
+    };
+    // send information where function is called
+    res
 }
 
 pub fn remove_project(proj: &str, projs: Vec<String>) -> Vec<String> {
