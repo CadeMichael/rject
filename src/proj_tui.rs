@@ -28,7 +28,7 @@ pub fn new_proj_popup(s: &mut Cursive) {
                             .on_submit(created_new_popup)
                             .with_name("new proj")
                             .full_width()
-                            .max_width(60)
+                            .max_width(50)
                             .with_name("eview"),
                     )
                     .button("pwd", |s| {
