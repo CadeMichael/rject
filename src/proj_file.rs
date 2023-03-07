@@ -30,12 +30,31 @@ pub fn read_proj() -> Vec<String> {
 
     // get buffer from file
     let buf = BufReader::new(file);
+    let mut rewrite = false;
     // convert buffer to vector with no empty entries
     let projs: Vec<String> = buf
         .lines()
         .map(|l| l.expect("file cannot be read"))
         .filter(|p| !p.is_empty()) // no blank lines
+        .filter(|p| { // check for currupted paths
+            if !Path::new(p).exists() {
+                rewrite = true;
+                return false;
+            }
+            return true;
+        })
         .collect();
+
+    // if proj file needs to be re written
+    if rewrite {
+        let mut file = File::create(proj_path()).expect("cannot access proj file");
+
+        // re write file from scratch
+        for p in projs.iter() {
+            file.write_fmt(format_args!("{}\n", p))
+                .expect("cannot write");
+        }
+    }
 
     // return vector of projects
     projs

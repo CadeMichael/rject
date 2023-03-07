@@ -24,10 +24,14 @@ pub fn new_proj_popup(s: &mut Cursive) {
                 EditView::new()
                     .on_submit(created_new_popup)
                     .with_name("new proj")
-                    .fixed_width(20)
+                    .full_width()
+                    .max_width(60)
                     .with_name("eview"),
             )
-            .button("Ok", |s| {
+            .button("Q", |s| {
+                s.pop_layer();
+            })
+            .button("add", |s| {
                 let path = s
                     .call_on_name("new proj", |view: &mut EditView| view.get_content())
                     .unwrap();
@@ -47,13 +51,14 @@ pub fn create_select_list() -> OnEventView<SelectView> {
             .arg("new-window")
             .arg("-c")
             .arg(path)
-            .output().unwrap();
+            .output()
+            .unwrap();
         s.quit();
-    });//created_new_popup(s, name));
-    // s in 'event_inner' is the select
-    // s in 'event' is cursive instance
-    // the _ i'm using represents an 'Event' not sure if needs to be delt with
-    // for what we're doing
+    }); //created_new_popup(s, name));
+        // s in 'event_inner' is the select
+        // s in 'event' is cursive instance
+        // the _ i'm using represents an 'Event' not sure if needs to be delt with
+        // for what we're doing
     let select = OnEventView::new(select)
         // -- moving around list --
         .on_pre_event_inner('k', |s, _| {
