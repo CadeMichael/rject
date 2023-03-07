@@ -28,8 +28,7 @@ pub fn new_proj_popup(s: &mut Cursive) {
                             .on_submit(created_new_popup)
                             .with_name("new proj")
                             .full_width()
-                            .max_width(50)
-                            .with_name("eview"),
+                            .max_width(50),
                     )
                     .button("pwd", |s| {
                         // get dir
@@ -57,6 +56,7 @@ pub fn new_proj_popup(s: &mut Cursive) {
                         s.pop_layer();
                     }),
             )
+            // show user pwd
             .child(TextView::new(format!(
                 "pwd:\n{}",
                 env::current_dir().unwrap().to_str().unwrap()
@@ -65,19 +65,37 @@ pub fn new_proj_popup(s: &mut Cursive) {
 }
 
 pub fn create_select_list() -> OnEventView<SelectView> {
+    // create base select
     let mut select = SelectView::new()
         .h_align(cursive::align::HAlign::Center)
         .autojump();
+    // add projects
     select.add_all_str(proj_file::read_proj());
+    // set keybindings
     select.set_on_submit(|s, path: &str| {
-        //println!("{}", name);
-        Command::new("tmux")
+        // open new tmux window at given path
+        match Command::new("tmux")
             .arg("new-window")
             .arg("-c")
             .arg(path)
             .output()
-            .unwrap();
-        s.quit();
+        {
+            Ok(res) => {
+                // tmux not started
+                if res.stderr.len() != 0 {
+                    s.add_layer(
+                        Dialog::around(TextView::new("start tmux!")).button("exit", |s| s.quit()),
+                    );
+                // no errors, go to dir
+                } else {
+                    s.quit();
+                }
+            }
+            Err(_) => {
+                // error executing command
+                s.add_layer(TextView::new("Error!"));
+            }
+        };
     }); //created_new_popup(s, name));
         // s in 'event_inner' is the select
         // s in 'event' is cursive instance
