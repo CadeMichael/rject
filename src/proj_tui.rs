@@ -58,7 +58,7 @@ pub fn new_proj_popup(s: &mut Cursive) {
             )
             // show user pwd
             .child(TextView::new(format!(
-                "pwd:\n{}",
+                "pwd:\n{}/",
                 env::current_dir().unwrap().to_str().unwrap()
             ))),
     ));
