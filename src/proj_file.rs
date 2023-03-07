@@ -3,15 +3,15 @@ use std::io::{prelude::*, BufReader};
 use std::path::{Path, PathBuf};
 
 // fn main() {
-    // add_project("cade/world", &read_proj());
-    // add_project("test/world", &read_proj());
-    // add_project("test1/world", &read_proj());
-    // add_project("test2/world", &read_proj());
+// add_project("cade/world", &read_proj());
+// add_project("test/world", &read_proj());
+// add_project("test1/world", &read_proj());
+// add_project("test2/world", &read_proj());
 
-    // let projs = read_proj();
-    // println!("{:?}", projs);
-    // remove_project("cade/world", projs);
-    // println!("{:?}", read_proj());
+// let projs = read_proj();
+// println!("{:?}", projs);
+// remove_project("cade/world", projs);
+// println!("{:?}", read_proj());
 // }
 
 fn proj_path() -> PathBuf {
@@ -26,7 +26,7 @@ fn proj_path() -> PathBuf {
 }
 
 pub fn read_proj() -> Vec<String> {
-    // open or create 
+    // open or create
     let file = match File::open(proj_path()) {
         // proj file doesn't exist
         Err(_) => match File::create(proj_path()) {
@@ -56,7 +56,7 @@ pub fn read_proj() -> Vec<String> {
 pub fn add_project(p: &str, projs: &[String]) {
     // make sure project isn't already present
     if projs.contains(&p.to_string()) {
-        return
+        return;
     }
     // open file for appending
     let mut file = OpenOptions::new()
@@ -65,19 +65,16 @@ pub fn add_project(p: &str, projs: &[String]) {
         .expect("cannot open proj file");
 
     // append new project
-    file.write_fmt(format_args!("{}\n", p)).expect("wrote to file");
+    file.write_fmt(format_args!("{}\n", p))
+        .expect("wrote to file");
 }
 
 pub fn remove_project(proj: &str, projs: Vec<String>) -> Vec<String> {
     // open file (overwrite)
-    let mut file = File::create(proj_path())
-        .expect("cannot access proj file");
+    let mut file = File::create(proj_path()).expect("cannot access proj file");
 
     // remove specified project
-    let new_projs:Vec<String> = projs
-        .into_iter()
-        .filter(|p| p != proj)
-        .collect();
+    let new_projs: Vec<String> = projs.into_iter().filter(|p| p != proj).collect();
 
     // re write file from scratch
     for p in new_projs.iter() {
