@@ -1,3 +1,5 @@
+use std::process::Command;
+
 use cursive::event::EventResult;
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
@@ -39,7 +41,15 @@ pub fn create_select_list() -> OnEventView<SelectView> {
         .h_align(cursive::align::HAlign::Center)
         .autojump();
     select.add_all_str(proj_file::read_proj());
-    select.set_on_submit(|s, name: &str| created_new_popup(s, name));
+    select.set_on_submit(|s, path: &str| {
+        //println!("{}", name);
+        Command::new("tmux")
+            .arg("new-window")
+            .arg("-c")
+            .arg(path)
+            .output().unwrap();
+        s.quit();
+    });//created_new_popup(s, name));
     // s in 'event_inner' is the select
     // s in 'event' is cursive instance
     // the _ i'm using represents an 'Event' not sure if needs to be delt with
@@ -91,5 +101,6 @@ pub fn created_new_popup(s: &mut Cursive, path: &str) {
         s.add_layer(Dialog::around(TextView::new(content)).button("Ok", |s| {
             s.pop_layer();
         }));
+        println!("{}", &path);
     }
 }
