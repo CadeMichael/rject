@@ -52,7 +52,7 @@ pub fn new_proj_popup(s: &mut Cursive) {
                             .unwrap();
                         created_new_popup(s, &path);
                     })
-                    .button("Q", |s| {
+                    .button("cancel", |s| {
                         s.pop_layer();
                     }),
             )
