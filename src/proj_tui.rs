@@ -55,13 +55,18 @@ pub fn new_proj_popup(s: &mut Cursive) {
                         s.call_on_name("new proj", |view: &mut EditView| view.set_content(path));
                     })
                     .button("add", |s| {
+                        // get path from input
                         let path = s
                             .call_on_name("new proj", |view: &mut EditView| view.get_content())
                             .unwrap();
+                        // create popup
                         created_new_popup(s, &path);
                     })
                     .button("cancel", |s| {
+                        // remove popup
                         s.pop_layer();
+                        // rebuild base view
+                        create_base_view(s, create_select_list());
                     }),
             )
             // show user pwd
@@ -81,29 +86,7 @@ pub fn create_select_list() -> OnEventView<SelectView> {
     select.add_all_str(proj_file::read_proj());
     // set keybindings
     select.set_on_submit(|s, path: &str| {
-        // open new tmux window at given path
-        match Command::new("tmux")
-            .arg("new-window")
-            .arg("-c")
-            .arg(path)
-            .output()
-        {
-            Ok(res) => {
-                // tmux not started
-                if res.stderr.len() != 0 {
-                    s.add_layer(
-                        Dialog::around(TextView::new("start tmux!")).button("exit", |s| s.quit()),
-                    );
-                // no errors, go to dir
-                } else {
-                    s.quit();
-                }
-            }
-            Err(_) => {
-                // error executing command
-                s.add_layer(TextView::new("Error!"));
-            }
-        };
+        execute_command(s, path);
     }); //created_new_popup(s, name));
         // s in 'event_inner' is the select
         // s in 'event' is cursive instance
@@ -166,4 +149,96 @@ pub fn created_new_popup(s: &mut Cursive, path: &str) {
             create_base_view(s, create_select_list());
         }));
     }
+}
+
+enum Action {
+    Code,
+    Tmux,
+}
+
+fn execute_command(s: &mut Cursive, path: &str) {
+    // get user args
+    let args: Vec<String> = env::args().collect();
+    // add to current vscode window
+    let mut code_add = false;
+
+    // parse commands
+    let command: Action = match &args[..] {
+        // no commands default to tmux
+        [] => Action::Tmux,
+        // one command check for code
+        // any other command default to tmux
+        [_, cmd] => {
+            if cmd == "code" {
+                Action::Code
+            } else {
+                Action::Tmux
+            }
+        }
+        // check for "code add" 
+        // default to tmux
+        [_, cmd, arg] => {
+            if cmd == "code" && arg == "add" {
+                code_add = true;
+                Action::Code
+            } else {
+                Action::Tmux
+            }
+        }
+        // any other incorrect combo default to tmux
+        _ => Action::Tmux,
+    };
+    match command {
+        Action::Tmux => {
+            match Command::new("tmux")
+                .arg("new-window")
+                .arg("-c")
+                .arg(path)
+                .output()
+            {
+                Ok(res) => {
+                    // tmux not started
+                    if res.stderr.len() != 0 {
+                        s.add_layer(
+                            Dialog::around(TextView::new("start tmux!"))
+                                .button("exit", |s| s.quit()),
+                        );
+                    // no errors, go to dir
+                    } else {
+                        s.quit();
+                    }
+                }
+                Err(_) => {
+                    // error executing command
+                    s.add_layer(TextView::new("Error!"));
+                }
+            };
+        }
+        Action::Code => {
+            let win_type = if code_add {"-a"} else{"-n"};
+
+            match Command::new("code")
+                .arg(win_type)
+                .arg(path)
+                .output()
+            {
+                Ok(res) => {
+                    // tmux not started
+                    if res.stderr.len() != 0 {
+                        s.add_layer(
+                            Dialog::around(TextView::new("start tmux!"))
+                                .button("exit", |s| s.quit()),
+                        );
+                    // no errors, go to dir
+                    } else {
+                        s.quit();
+                    }
+                }
+                Err(_) => {
+                    // error executing command
+                    s.add_layer(TextView::new("Error!"));
+                }
+            };
+        }
+    };
 }

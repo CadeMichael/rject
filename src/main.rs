@@ -1,11 +1,6 @@
 mod proj_file;
 mod proj_tui;
 
-// fn change(siv: &mut Cursive) -> EventResult {
-// let name = siv.focus(&Selector::Name("eview"));
-// return name.unwrap_or_else(|e| panic!("{}", e));
-// }
-
 fn main() {
     let mut siv = cursive::default();
     let select = proj_tui::create_select_list();
