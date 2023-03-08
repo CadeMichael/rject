@@ -1,6 +1,3 @@
-use cursive::view::Scrollable;
-use cursive::views::{Dialog, LinearLayout, TextView};
-
 mod proj_file;
 mod proj_tui;
 
@@ -15,11 +12,6 @@ fn main() {
     let theme = proj_tui::custom_theme_from_cursive(&siv);
 
     siv.set_theme(theme);
-    siv.add_layer(Dialog::around(
-        LinearLayout::vertical()
-            .child(Dialog::around(select.scrollable()).title("Projects"))
-            .child(TextView::new(" r:refresh | n:new | D:delete | Esc:exit ")),
-    ));
-
+    proj_tui::create_base_view(&mut siv, select);
     siv.run();
 }

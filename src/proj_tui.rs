@@ -10,6 +10,14 @@ use cursive::Cursive;
 // I think this import is correct
 use crate::proj_file;
 
+pub fn create_base_view(siv: &mut Cursive, select: OnEventView<SelectView>) {
+    siv.add_layer(Dialog::around(
+        LinearLayout::vertical()
+            .child(Dialog::around(select.scrollable()).title("Projects"))
+            .child(TextView::new(" r:refresh | n:new | D:delete | Esc:exit ")),
+    ));
+}
+
 pub fn custom_theme_from_cursive(siv: &Cursive) -> Theme {
     let mut theme = siv.current_theme().clone();
     theme.palette[PaletteColor::Background] = Color::TerminalDefault;
@@ -128,7 +136,9 @@ pub fn create_select_list() -> OnEventView<SelectView> {
             let cb = s.remove_item(s.selected_id().unwrap());
             Some(EventResult::Consumed(Some(cb)))
         })
-        .on_event('n', |s| {
+        .on_event('n', move |s| {
+            // pop select list view
+            s.pop_layer();
             // popup to create new project
             new_proj_popup(s);
         });
@@ -137,6 +147,7 @@ pub fn create_select_list() -> OnEventView<SelectView> {
 }
 
 pub fn created_new_popup(s: &mut Cursive, path: &str) {
+    // no user data
     if path.is_empty() {
         s.add_layer(Dialog::info("Enter Project Path:"));
     } else {
@@ -145,10 +156,14 @@ pub fn created_new_popup(s: &mut Cursive, path: &str) {
             None => format!("Project {path}!"),
             Some(s) => s,
         };
+
+        // remove popup
         s.pop_layer();
+        // allert that new path has been added
         s.add_layer(Dialog::around(TextView::new(content)).button("Ok", |s| {
             s.pop_layer();
+            // remake base view with new select list
+            create_base_view(s, create_select_list());
         }));
-        println!("{}", &path);
     }
 }
