@@ -11,10 +11,19 @@ use cursive::Cursive;
 use crate::proj_file;
 
 pub fn create_base_view(siv: &mut Cursive, select: OnEventView<SelectView>) {
+    // get user args
+    let args: Vec<String> = env::args().collect();
+    let open_ins = match &args[..] {
+        [_] => "Tmux",
+        [_, cmd] => if cmd == "code" {"Code"} else {"Tmux"},
+        _ => "Tmux"
+
+    };
     siv.add_layer(Dialog::around(
         LinearLayout::vertical()
             .child(Dialog::around(select.scrollable()).title("Projects"))
-            .child(TextView::new(" r:refresh | n:new | D:delete | Esc:exit ")),
+            .child(TextView::new(" r:refresh | n:new | D:delete | Esc:exit "))
+            .child(TextView::new(format!(" Using: {}", open_ins))),
     ));
 }
 
