@@ -4,25 +4,38 @@ use std::process::Command;
 use cursive::event::{EventResult, Key};
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
-use cursive::views::{Dialog, EditView, LinearLayout, OnEventView, SelectView, TextView};
+use cursive::views::{
+    Dialog, EditView, LinearLayout, ListView, NamedView, OnEventView, SelectView, TextView, ViewRef,
+};
 use cursive::Cursive;
 
 use crate::proj_file;
 
-pub fn create_base_view(siv: &mut Cursive, select: OnEventView<SelectView>) {
+pub fn create_base_view(siv: &mut Cursive, select: NamedView<OnEventView<SelectView>>) {
     // get user args
     let args: Vec<String> = env::args().collect();
     let open_ins = match &args[..] {
         [_] => "Tmux",
-        [_, cmd] => if cmd == "code" {"Code"} else {"Tmux"},
-        [_, cmd, ..] => if cmd == "code" {"Code"} else {"Tmux"},
-        _ => "Tmux"
-
+        [_, cmd] => {
+            if cmd == "code" {
+                "Code"
+            } else {
+                "Tmux"
+            }
+        }
+        [_, cmd, ..] => {
+            if cmd == "code" {
+                "Code"
+            } else {
+                "Tmux"
+            }
+        }
+        _ => "Tmux",
     };
     siv.add_layer(Dialog::around(
         LinearLayout::vertical()
             .child(Dialog::around(select.scrollable()).title("Projects"))
-            .child(TextView::new(" r:refresh | n:new | D:delete | Esc:exit "))
+            .child(TextView::new(" | h:help | n:new | D:del | Esc:exit "))
             .child(TextView::new(format!(" Using: {}", open_ins))),
     ));
 }
@@ -86,7 +99,30 @@ pub fn new_proj_popup(s: &mut Cursive) {
     ));
 }
 
-pub fn create_select_list() -> OnEventView<SelectView> {
+fn create_preview(s: &mut Cursive, path: &str) {
+    let mut cmd_ls = Command::new("ls");
+    let out = cmd_ls.current_dir(path).output();
+    let output = match out {
+        Ok(res) => String::from_utf8(res.stdout).unwrap(),
+        Err(e) => panic!("failed at: {}", e),
+    };
+    let mut res_vec = output.split("\n").collect::<Vec<&str>>().clone();
+    res_vec.pop();
+    let mut l_view = ListView::new();
+    for file in res_vec {
+        l_view.add_child("|-", TextView::new(file))
+    }
+    s.add_layer(Dialog::around(
+        Dialog::new()
+            .title(path)
+            .content(l_view)
+            .button("back", |s| {
+                s.pop_layer();
+            }),
+    ));
+}
+
+pub fn create_select_list() -> NamedView<OnEventView<SelectView>> {
     // create base select
     let mut select = SelectView::new()
         .h_align(cursive::align::HAlign::Center)
@@ -103,6 +139,22 @@ pub fn create_select_list() -> OnEventView<SelectView> {
         // for what we're doing
     let select = OnEventView::new(select)
         .on_event(Key::Esc, |s| s.quit())
+        .on_event('h', |s| {
+            s.add_layer(Dialog::around(
+                Dialog::new()
+                    .title("Help Menu")
+                    .content(TextView::new(" p:preview | r:refresh | j/k: up down "))
+                    .button("back", |s| {
+                        s.pop_layer();
+                    }),
+            ));
+        })
+        .on_event('p', |s| {
+            let select: ViewRef<OnEventView<SelectView>> = s.find_name("Selection").unwrap();
+            let sel = select.get_inner();
+            let path = sel.selection().unwrap();
+            create_preview(s, &path)
+        })
         // -- moving around list --
         .on_pre_event_inner('k', |s, _| {
             let cb = s.select_up(1);
@@ -133,7 +185,8 @@ pub fn create_select_list() -> OnEventView<SelectView> {
             s.pop_layer();
             // popup to create new project
             new_proj_popup(s);
-        });
+        })
+        .with_name("Selection");
 
     select
 }
@@ -184,7 +237,7 @@ fn execute_command(s: &mut Cursive, path: &str) {
                 Action::Tmux
             }
         }
-        // check for "code add" 
+        // check for "code add"
         // default to tmux
         [_, cmd, arg] => {
             if cmd == "code" && arg == "add" {
@@ -224,13 +277,9 @@ fn execute_command(s: &mut Cursive, path: &str) {
             };
         }
         Action::Code => {
-            let win_type = if code_add {"-a"} else{"-n"};
+            let win_type = if code_add { "-a" } else { "-n" };
 
-            match Command::new("code")
-                .arg(win_type)
-                .arg(path)
-                .output()
-            {
+            match Command::new("code").arg(win_type).arg(path).output() {
                 Ok(res) => {
                     // tmux not started
                     if res.stderr.len() != 0 {
