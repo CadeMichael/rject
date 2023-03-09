@@ -15,6 +15,7 @@ pub fn create_base_view(siv: &mut Cursive, select: OnEventView<SelectView>) {
     let open_ins = match &args[..] {
         [_] => "Tmux",
         [_, cmd] => if cmd == "code" {"Code"} else {"Tmux"},
+        [_, cmd, ..] => if cmd == "code" {"Code"} else {"Tmux"},
         _ => "Tmux"
 
     };
