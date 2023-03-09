@@ -7,7 +7,6 @@ use cursive::traits::*;
 use cursive::views::{Dialog, EditView, LinearLayout, OnEventView, SelectView, TextView};
 use cursive::Cursive;
 
-// I think this import is correct
 use crate::proj_file;
 
 pub fn create_base_view(siv: &mut Cursive, select: OnEventView<SelectView>) {
