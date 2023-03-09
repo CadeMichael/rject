@@ -5,7 +5,8 @@ use cursive::event::{EventResult, Key};
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
 use cursive::views::{
-    Dialog, EditView, LinearLayout, ListView, NamedView, OnEventView, SelectView, TextView, ViewRef,
+    Button, Dialog, EditView, LinearLayout, ListView, NamedView, OnEventView, SelectView, TextView,
+    ViewRef,
 };
 use cursive::Cursive;
 
@@ -113,12 +114,14 @@ fn create_preview(s: &mut Cursive, path: &str) {
         l_view.add_child("|-", TextView::new(file))
     }
     s.add_layer(Dialog::around(
-        Dialog::new()
-            .title(path)
-            .content(l_view)
-            .button("back", |s| {
-                s.pop_layer();
-            }),
+        LinearLayout::vertical()
+            .child(Dialog::new().title(path).content(l_view).scrollable())
+            .child(
+                Dialog::around(Button::new("back", |s| {
+                    s.pop_layer();
+                }))
+                .max_width("<back>".len() + 4),
+            ),
     ));
 }
 
