@@ -1,5 +1,5 @@
+use cursive::views::{Dialog, TextView};
 use cursive::Cursive;
-use cursive::views::{TextView, Dialog};
 use std::env;
 use std::process::Command;
 
@@ -19,26 +19,30 @@ pub fn execute_command(s: &mut Cursive, path: &str) {
     let command: Action = match &args[..] {
         // no commands default to tmux
         [] => Action::Tmux,
-        // one command check for code
-        // any other command default to tmux
+        // check for code
         [_, cmd] => {
+            // vscode
             if cmd == "code" {
                 Action::Code
+            // cooler vscode
             } else if cmd == "code-oss" {
                 Action::CodeOss
+            // default
             } else {
                 Action::Tmux
             }
         }
         // check for "code add"
-        // default to tmux
         [_, cmd, arg] => {
+            // regular vscode
             if cmd == "code" && arg == "add" {
                 code_add = true;
                 Action::Code
+            // based OSS vscode
             } else if cmd == "code-oss" && arg == "add" {
                 code_add = true;
                 Action::CodeOss
+            // any other input default
             } else {
                 Action::Tmux
             }
@@ -48,6 +52,7 @@ pub fn execute_command(s: &mut Cursive, path: &str) {
     };
     match command {
         Action::Tmux => {
+            // open new window at 'path'
             match Command::new("tmux")
                 .arg("new-window")
                 .arg("-c")
