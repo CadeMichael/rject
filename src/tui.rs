@@ -10,7 +10,7 @@ use cursive::views::{
 };
 use cursive::Cursive;
 
-use crate::proj_file;
+use crate::file;
 
 pub fn create_base_view(siv: &mut Cursive, select: NamedView<OnEventView<SelectView>>) {
     // get user args
@@ -110,8 +110,8 @@ fn create_preview(s: &mut Cursive, path: &str) {
     let mut res_vec = output.split("\n").collect::<Vec<&str>>().clone();
     res_vec.pop();
     let mut l_view = ListView::new();
-    for file in res_vec {
-        l_view.add_child("|-", TextView::new(file))
+    for f in res_vec {
+        l_view.add_child("|-", TextView::new(f))
     }
     s.add_layer(Dialog::around(
         LinearLayout::vertical()
@@ -131,7 +131,7 @@ pub fn create_select_list() -> NamedView<OnEventView<SelectView>> {
         .h_align(cursive::align::HAlign::Center)
         .autojump();
     // add projects
-    select.add_all_str(proj_file::read_proj());
+    select.add_all_str(file::read_proj());
     // set keybindings
     select.set_on_submit(|s, path: &str| {
         execute_command(s, path);
@@ -170,13 +170,13 @@ pub fn create_select_list() -> NamedView<OnEventView<SelectView>> {
         // -- refresh list --
         .on_event_inner('r', |s, _| {
             s.clear();
-            s.add_all_str(proj_file::read_proj());
+            s.add_all_str(file::read_proj());
             None
         })
         // -- adding / removing projects --
         .on_event_inner('D', |s, _| {
             // cannot borrow so just re read file, optimize later
-            proj_file::remove_project(&s.selection().unwrap(), proj_file::read_proj());
+            file::remove_project(&s.selection().unwrap(), file::read_proj());
             // add popup to confirm here
             // -- TODO
             // graphically remove item from list
@@ -200,7 +200,7 @@ pub fn created_new_popup(s: &mut Cursive, path: &str) {
         s.add_layer(Dialog::info("Enter Project Path:"));
     } else {
         // determine if path is correct or if project already exists
-        let content = match proj_file::add_project(path, &proj_file::read_proj()) {
+        let content = match file::add_project(path, &file::read_proj()) {
             None => format!("Project {path}!"),
             Some(s) => s,
         };
