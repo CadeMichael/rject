@@ -36,7 +36,8 @@ pub fn read_proj() -> Vec<String> {
         .lines()
         .map(|l| l.expect("file cannot be read"))
         .filter(|p| !p.is_empty()) // no blank lines
-        .filter(|p| { // check for currupted paths
+        .filter(|p| {
+            // check for currupted paths
             if !Path::new(p).exists() {
                 rewrite = true;
                 return false;
