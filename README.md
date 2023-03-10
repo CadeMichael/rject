@@ -16,12 +16,17 @@
 
 # Installing
 
+## Using Cargo 
+
+```sh
+cargo install --git https://github.com/cademichael/rject
+```
+
+## Building From Cloned Repo
+
 - clone the [repo](github.com/cademichael/rject/) and run
 
 ```sh
 # build binary
-cargo build
-
-# create a simlink to a folder in $Path to call the command from anywhere
-ln -s [path to binary] [path to your .local/bin/]
+cargo install --path ./
 ```
