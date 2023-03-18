@@ -73,7 +73,9 @@ pub fn execute_command(s: &mut Cursive, path: &str) {
                 }
                 Err(_) => {
                     // error executing command
-                    s.add_layer(TextView::new("Error!"));
+                    s.add_layer(
+                        Dialog::around(TextView::new("start tmux!")).button("exit", |s| s.quit()),
+                    );
                 }
             };
         }
@@ -86,7 +88,9 @@ pub fn execute_command(s: &mut Cursive, path: &str) {
                 }
                 Err(_) => {
                     // error executing command
-                    s.add_layer(TextView::new("Error!"));
+                    s.add_layer(
+                        Dialog::around(TextView::new("Code not found!")).button("exit", |s| s.quit()),
+                    );
                 }
             };
         }
@@ -99,7 +103,9 @@ pub fn execute_command(s: &mut Cursive, path: &str) {
                 }
                 Err(_) => {
                     // error executing command
-                    s.add_layer(TextView::new("Error!"));
+                    s.add_layer(
+                        Dialog::around(TextView::new("Code not found!")).button("exit", |s| s.quit()),
+                    );
                 }
             };
         }
