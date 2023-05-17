@@ -24,6 +24,8 @@ pub fn create_base_view(siv: &mut Cursive, select: NamedView<OnEventView<SelectV
         [_, cmd] => {
             if cmd == "code" || cmd == "code-oss" {
                 "Code"
+            } else if cmd == "nvim" {
+                "Nvim"
             } else {
                 "Tmux"
             }

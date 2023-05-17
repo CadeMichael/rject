@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 dirs = "4.0"
 cursive = "0.20"
+crossterm = "0.26.1"

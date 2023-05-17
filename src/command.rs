@@ -2,10 +2,12 @@ use cursive::views::{Dialog, TextView};
 use cursive::Cursive;
 use std::env;
 use std::process::Command;
+use crossterm::terminal::disable_raw_mode;
 
 enum Action {
     Code,
     CodeOss,
+    Nvim,
     Tmux,
 }
 
@@ -27,6 +29,9 @@ pub fn execute_command(s: &mut Cursive, path: &str) {
             // cooler vscode
             } else if cmd == "code-oss" {
                 Action::CodeOss
+            // neovim
+            } else if cmd == "nvim" {
+                Action::Nvim
             // default
             } else {
                 Action::Tmux
@@ -75,6 +80,22 @@ pub fn execute_command(s: &mut Cursive, path: &str) {
                     // error executing command
                     s.add_layer(
                         Dialog::around(TextView::new("start tmux!")).button("exit", |s| s.quit()),
+                    );
+                }
+            };
+        }
+        Action::Nvim => {
+            // give nvim the right cwd
+            let _ = env::set_current_dir(path);
+            // open nvim
+            match Command::new("nvim").arg("./").status() {
+                Ok(_) => {
+                    let _ = disable_raw_mode();
+                    s.quit();
+                },
+                Err(_) => {
+                    s.add_layer(
+                        Dialog::around(TextView::new("neovim not found")).button("exit", |s| s.quit()),
                     );
                 }
             };
