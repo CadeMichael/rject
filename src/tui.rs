@@ -50,7 +50,7 @@ pub fn create_base_view(siv: &mut Cursive, select: NamedView<OnEventView<SelectV
             // select list
             .child(Dialog::around(select.scrollable()).title("Projects"))
             // instructions
-            .child(TextView::new(" | h:help | n:new | D:del | Esc:exit "))
+            .child(TextView::new(" | h:help | n:new | D:del | Esc/q:exit "))
             // backend
             .child(TextView::new(format!(" Using: {}", open_ins))),
     ));
@@ -174,6 +174,7 @@ pub fn create_select_list() -> NamedView<OnEventView<SelectView>> {
     let select = OnEventView::new(select)
         // -- exit --
         .on_event(Key::Esc, |s| s.quit())
+        .on_event('q', |s| s.quit())
         // -- help menu --
         .on_event('h', |s| {
             s.add_layer(Dialog::around(
